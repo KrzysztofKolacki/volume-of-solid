@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Objętość bryły ograniczonej powierzchniami</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css"
+        integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" crossorigin="anonymous">
+
+
+    <!-- The loading of KaTeX is deferred to speed up page rendering -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"
+        integrity="sha384-PwRUT/YqbnEjkZO0zZxNqcxACrXe+j766U2amXcgMg5457rve2Y7I6ZJSm2A0mS4"
+        crossorigin="anonymous"></script>
+
+    <!-- To automatically render math in text elements, include the auto-render extension: -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css"
+        integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"
+        integrity="sha384-PwRUT/YqbnEjkZO0zZxNqcxACrXe+j766U2amXcgMg5457rve2Y7I6ZJSm2A0mS4"
+        crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05"
+        crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            renderMathInElement(document.body, {
+                // customised options
+                // • auto-render specific keys, e.g.:
+                delimiters: [
+                    { left: '$', right: '$', display: false },
+                    { left: '$$', right: '$$', display: true },
+                    { left: '\\(', right: '\\)', display: false },
+                    { left: '\\[', right: '\\]', display: true }
+                ],
+                // • rendering keys, e.g.:
+                throwOnError: false
+            });
+        });
+    </script>
+    <script src="https://unpkg.com/evaluatex@2.2.0/dist/evaluatex.min.js"></script>
+    <script src="https://unpkg.com/mathjs@11.6.0/lib/browser/math.js" type="text/javascript"></script>
+    <link href="https://unpkg.com/tailwindcss@2.0.0-compat/dist/tailwind.min.css" rel=" stylesheet" />
+
+    <style>
+        .result {
+            display: none;
+        }
+    </style>
+
+    <script>
+
+        // x - to wysokość
+        // y - to promień
+        // z - to wartość płaszczyzny
+
+        let x = "";
+        let y = "";
+        let oper = "";
+        let x0;
+        let y0;
+        let dx;
+        let dy;
+        let pochodnaXwartosci = "";
+        let string = "";
+        let solution = "";
+        let KatexString = "";
+        let displaySolution = "";
+        let KatexSolution = "";
+
+        function setX() {
+            x = document.getElementsByTagName("input")[0].value;
+            reRenderEQ();
+        }
+
+        function setY() {
+            y = document.getElementsByTagName("input")[1].value;
+            reRenderEQ();
+        }
+
+        function setZ() {
+            z = document.getElementsByTagName("input")[2].value;
+            reRenderEQ();
+        }
+
+        function setOper() {
+            oper = document.getElementsByTagName("select")[0].value;
+            reRenderEQ();
+        }
+
+        function refresh() {
+
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$', right: '$', display: false }]
+            });
+            console.log(x)
+        }
+
+        function updateValue(className, x) {
+            let elements = document.getElementsByClassName(className);
+            for (let i = 0; i < elements.length; i++) {
+                elements[i].innerHTML = '$ ' + x + ' $';
+            }
+
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$', right: '$', display: true },
+                    { left: '\\(', right: '\\)', display: true },
+                    { left: '\\[', right: '\\]', display: true }
+                ]
+            });
+            console.log(x)
+        }
+
+        function validateInput() {
+
+            let x = document.getElementById("input_X").value;
+            let y = document.getElementById("input_Y").value;
+            let z = document.getElementById("input_Z").value;
+
+            if (x === "" || y === "" || z === "") {
+                alert("Proszę wprowadzić wartość dla wszystkich pól wejściowych");
+                return false;
+            }
+
+            if (isNaN(x) || isNaN(y) || isNaN(z)) {
+                alert("Proszę wprowadzić tylko liczby");
+                return false;
+            }
+
+            if (x < 0 || y < 0 || z < 0) {
+                alert("Proszę wprowadzić tylko liczby dodatnie");
+                return false;
+            }
+
+            if (z >= x) {
+                alert("Wartość zmiennej z musi być mniejsza niż wysokość paraboloidy");
+                return false;
+            }
+
+            if (y == 0) {
+                alert("Promień nie może być równy 0");
+                return false;
+            }
+
+            if (x % 1 !== 0 || y % 1 !== 0 || z % 1 !== 0) {
+                alert("Proszę wprowadzić liczby z nie więcej niż dwoma miejscami po przecinku");
+                return false;
+            }
+
+            if (x > Number.MAX_SAFE_INTEGER || y > Number.MAX_SAFE_INTEGER || z > Number.MAX_SAFE_INTEGER) {
+                alert("Proszę wprowadzić mniejsze liczby");
+                return false;
+            }
+
+            // Jeśli wszystkie walidacje zostaną zaliczone, zwróć wartość true
+            return true;
+        }
+
+
+
+
+        function oblicz() {
+
+            if (validateInput() == false) {
+                document.getElementsByClassName("result")[0].style.display = "none";
+            }
+            else {
+                document.getElementsByClassName("result")[0].style.display = "none";
+
+                setTimeout(function () {
+                    document.getElementsByClassName("result")[0].style.display = "block";
+                }, 1000);
+            }
+
+
+
+            //x = x - z;
+
+
+            const xs = document.querySelectorAll('.x');
+            xs.forEach(el => {
+                el.innerHTML = `$${x}$`;
+            })
+
+            const ys = document.querySelectorAll('.y');
+            ys.forEach(el => {
+                el.innerHTML = `$${y}$`;
+            })
+
+            const zs = document.querySelectorAll('.z');
+            zs.forEach(el => {
+                el.innerHTML = `$${z}$`;
+            })
+
+
+
+            const xdlugi1 = document.querySelectorAll('.dlugi1');
+
+            //let xPow = Math.pow(2, x)
+
+            //let xSum = xPow + 4;
+            let yby2 = y / 2;
+
+            let yPow = Math.pow((yby2), 4)
+            let zPow = Math.pow(z, 4)
+
+            let der1 = (yPow / 4) - (zPow / 4);
+            //console.log(der1)
+
+            let xPow = Math.pow(yby2, 2)
+            let xPow2 = Math.pow(z, 2)
+            let xSum = der1 + ((xPow * x) / 2) - ((xPow2 * x) / 2);
+
+            let finalSum = xSum * 2;
+
+            xdlugi = `\\iint\\limits_D (x^2+y^2+${x - z})dx\\,dy=\\\\[6pt] =\\iint\\limits_\\Delta
+                (r^2\\cos^2\\varphi +r^2\\sin^2\\varphi+${x - z})\\cdot rdr\\,d\\varphi =\\\\[6pt] =\\iint\\limits_\\Delta
+                (r^2(\\cos^2\\varphi +\\sin^2\\varphi)+${x - z})\\cdot rdr\\,d\\varphi =\\\\[6pt] =\\iint\\limits_\\Delta
+                (r^2+${x - z})\\cdot rdr\\,d\\varphi =\\\\[6pt] =\\iint\\limits_\\Delta (r^3+${x - z}r)dr\\,d\\varphi =\\\\[6pt]
+                =\\int\\limits_{0}^{2\\pi}\\left(\\int\\limits_{0}^{${y / 2}}(r^3+${x - z}r)dr \\right)d\\varphi= \\\\[6pt]
+                =\\int\\limits_{0}^{2\\pi} ${xSum} d\\varphi= \\\\[6pt] =\\int\\limits_{0}^{2\\pi} ${xSum} d\\varphi=
+                \\left.${xSum}\\varphi\\right\\vert_0^{2\\pi}= ${xSum}\\cdot 2\\pi-0 = ${finalSum}\\pi`
+
+
+            const xzapis1 = document.querySelectorAll('.zapis1');
+            xzapis = `\\iiint\\limits_V dx\\,dy\\,dz=\\\\[6pt]
+                =\\iint\\limits_D \\left(\\int\\limits_{${z}}^{x^2+y^2+${x}}dz \\right) dx\\,dy=\\\\[6pt] =\\iint\\limits_D
+                (x^2+y^2+${x - z})dx\\,dy`
+
+
+
+            const yHalf = document.querySelectorAll('.yHalf');
+            yHalf[0].innerHTML = `${y / 2}`;
+            yHalf[1].innerHTML = `${y / 2}`;
+            yHalf[2].innerHTML = `${y / 2}`;
+
+            const xwynik = document.querySelectorAll('.wynik');
+            xwynik[0].innerHTML = `$${finalSum}\\pi$`
+
+
+            refresh();
+            updateValue('dlugi1', xdlugi)
+            updateValue('zapis1', xzapis)
+
+        }
+    </script>
+</head>
+
+<body class="bg-gray-900 text-white">
+    <div class="bg-gray-800 p-4 rounded-lg my-3 mx-5">
+        <div class="text-white mx-7 my-5 text-xl">Objętość bryły ograniczonej powierzchniami</div>
+        <div class="flex flex-row">
+
+            <div class="text-white mx-7 my-5 text-xl">Podaj wysokość paraboloidy</div>
+            <input class="bg-gray-700 text-white w-1/3 p-2 rounded-lg mx-7" type="text"
+                placeholder="Podaj wysokość paraboloidy" onchange="setX()" id="input_X" />
+
+
+            <div class="text-white mx-7 my-5 text-xl">Podaj promień</div>
+            <input class="bg-gray-700 text-white w-1/3 p-2 rounded-lg mx-7" type="text" placeholder="Podaj promień"
+                onchange="setY()" id="input_Y" />
+
+            <div class="text-white mx-7 my-5 text-xl">Podaj wartość z</div>
+            <input class="bg-gray-700 text-white w-1/ p-2 rounded-lg mx-7" type="text" placeholder="Podaj wartość z"
+                onchange="setZ()" id="input_Z" />
+
+            <button class="bg-gray-900 rounded-md px-6" onclick="oblicz()"="">Licz</button>
+        </div>
+        <div class="flex flex-row mt-10 justify-center items-center text-2xl">
+            <span id="outEQ" class="mx-1"></span>
+        </div>
+    </div>
+
+
+
+    <div class="bg-gray-800 p-4 rounded-lg my-3 mx-5">
+        <div class="result">
+            Oblicz objętość bryły ograniczonej płaszczyznami: $z=$<span class="z"></span>$$, $z=x^2+y^2+$<span
+                class="x"></span>$$ oraz
+            $x^2+y^2=$<span class="y"></span>$$.
+            <div> Płaszczyzny ograniczają obszar całkowania, który możemy zapisać
+                tak:
+                $V=\{(x,y,z)\in \mathbb{R}^3: z\ge$<span class="z"></span>$,\ z\le x^2+y^2+$<span class="x"></span>$,\
+                x^2+y^2\le $<span class="y"></span>$ \}$
+
+                Czyli mamy do
+                obliczenia objętość między paraboloidą: $z=x^2+y^2+$<span class="x"></span>$$, a kołem: $x^2+y^2\le
+                $<span class="y"></span>$$:
+                Objętość liczymy jako całkę
+                potrójną po wszystkich trzech zmiennych:
+                \[\iiint\limits_V dx\,dy\,dz\]
+
+                Żeby przejść na całkę
+                podwójną, wprowadzamy obszar całkowania na płaszczyźnie \(XY\):
+
+                $D=\{(x,y)\in \mathbb{R}^2:
+                x^2+y^2\le $<span class="y"></span>$\}$
+
+                <br>
+                Teraz możemy zapisać:
+                <span class="zapis1"></span>
+
+                Obszar \(D\) jest kołem o promieniu <span class="yHalf"></span>, zatem możemy wykonać
+                podstawienie na współrzędne biegunowe: \[\begin{cases} x=r\cos \varphi \\ y=r\sin \varphi
+                \end{cases} \]
+
+                gdzie $r\in \langle0,$<span class="yHalf"></span>$ \rangle$ oraz \(\varphi\in \langle 0,2\pi \rangle\).
+                Jakobian tego przekształcenia to:
+                \[J=\begin{vmatrix} \cos\varphi & -r\sin\varphi \\ \sin\varphi
+                & r\cos\varphi \end{vmatrix}=r \]
+
+                Możemy teraz zdefiniować nowy obszar całkowania:
+                $\Delta=\{(r,\varphi)\in \mathbb{R}^2: 0\le r\le $<span class="yHalf"></span>$,\ 0\le \varphi\le 2\pi
+                \}$
+
+                i dalej na nim
+                liczyć całkę:
+                <span class="dlugi1"></span><br>
+
+                Zatem szukana objętość
+                <span class="wynik"></span>
+            </div>
+
+
+        </div>
+    </div>
+</body>
+
+</html>
